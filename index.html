@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beans · Carta digital (demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Josefin+Sans:wght@400;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+  /* ===== Paleta Beans (sacada de sus cartas) ===== */
+  :root{
+    --caramel:#A87C4F;
+    --caramel-2:#C19A6B;
+    --caramel-soft:#F3EADF;
+    --paper:#FBF8F3;
+    --card:#FFFFFF;
+    --ink:#3B3530;
+    --muted:#8A8178;
+    --line:#E8DFD3;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'Josefin Sans',sans-serif;background:#E7DFD4;color:var(--ink);-webkit-font-smoothing:antialiased}
+  .app{max-width:480px;margin:0 auto;min-height:100vh;background:var(--paper);position:relative;padding-bottom:100px;overflow:hidden}
+
+  /* ===== Header con grabado ===== */
+  header{background:var(--caramel);height:190px;position:relative}
+  header .engrave{position:absolute;inset:0;width:100%;height:100%;stroke:#6E4E2E;fill:none;stroke-width:1.2;stroke-linecap:round;opacity:.55}
+  .logo{position:absolute;left:50%;bottom:-62px;transform:translateX(-50%);width:132px;height:132px;border-radius:50%;background:var(--paper);display:grid;place-items:center;box-shadow:0 0 0 6px var(--paper)}
+  .logo svg{width:112px;height:112px}
+  .logo .ring{fill:none;stroke:var(--caramel);stroke-width:1.5}
+  .logo text{fill:var(--caramel);font-family:'Josefin Sans';font-weight:700;font-size:10.5px;letter-spacing:3px}
+  .logo .b{font-family:'UnifrakturMaguntia';font-size:54px;letter-spacing:0;fill:var(--caramel)}
+  .hello{margin:78px 22px 0;text-align:center}
+  .hello .t{font-size:12px;letter-spacing:4px;text-transform:uppercase;color:var(--muted)}
+  .hello .msg{margin-top:12px;display:inline-flex;align-items:center;gap:8px;background:var(--caramel-soft);color:var(--caramel);font-weight:600;font-size:14px;padding:9px 16px;border-radius:999px}
+  .hello .msg i{width:8px;height:8px;border-radius:50%;background:var(--caramel);animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.25}}
+
+  /* ===== Buscador ===== */
+  .search{margin:18px 22px 6px;position:relative}
+  .search input{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:999px;padding:13px 16px 12px 42px;font:inherit;font-size:15px;color:var(--ink);outline:none}
+  .search input:focus{border-color:var(--caramel)}
+  .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);width:18px;stroke:var(--muted);fill:none;stroke-width:2}
+
+  /* ===== Chips ===== */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:12px 22px;position:sticky;top:0;background:var(--paper);z-index:5;scrollbar-width:none;border-bottom:1px solid transparent;transition:border-color .2s}
+  .chips.stuck{border-color:var(--line)}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1.5px solid var(--caramel);background:transparent;border-radius:999px;padding:8px 14px 6px;font:inherit;font-size:12.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--caramel);cursor:pointer}
+  .chip.on{background:var(--caramel);color:#fff}
+
+  /* ===== Tarjeta de sección con borde estampilla ===== */
+  main{padding:6px 22px}
+  .block{position:relative;background:var(--card);border-radius:4px;padding:26px 18px 10px;margin:18px 0 6px;scroll-margin-top:70px;
+    filter:drop-shadow(0 1px 0 var(--line)) drop-shadow(0 0 0 var(--line));
+    animation:in .35s ease both}
+  .block::before{content:"";position:absolute;left:0;right:0;top:-7px;height:8px;
+    background:radial-gradient(circle at 7px 8px,var(--card) 6.5px,transparent 7px) 0 0/14px 8px repeat-x}
+  @keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .block h2{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--caramel)}
+  .block h2 svg{width:20px;height:20px;stroke:var(--caramel);fill:none;stroke-width:1.4;flex:0 0 20px}
+  .block .sub{font-size:11.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  .block .note{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--caramel);background:var(--caramel-soft);padding:8px 10px;border-radius:8px;margin-top:12px;line-height:1.45}
+  .block.partner h2{color:#24344D}
+  .block.partner h2 svg{stroke:#24344D}
+
+  .item{display:flex;justify-content:space-between;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .item h3{font-size:14.5px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;line-height:1.3}
+  .item p{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .price{font-family:'DM Mono',monospace;font-weight:500;font-size:13.5px;white-space:nowrap;color:var(--ink);padding-top:1px}
+  .badges{margin-top:7px;display:flex;gap:5px;flex-wrap:wrap}
+  .badge{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 8px 2px;border-radius:999px;background:var(--caramel-soft);color:var(--caramel)}
+  .badge.veg{background:#E8EDE2;color:#6B7D5C}
+  .badge.tacc{background:#F6E9D6;color:#9A6A2E}
+  .badge.promo{background:var(--caramel);color:#fff}
+
+  /* Destacado (tipo Honey Matcha del PDF) */
+  .featured{background:var(--caramel);color:#fff;border-radius:var(--radius);padding:16px 18px;margin:18px 0 6px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;overflow:hidden}
+  .featured small{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;opacity:.8}
+  .featured h3{font-size:16px;letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+  .featured p{font-family:'DM Mono',monospace;font-size:12px;opacity:.9;margin-top:4px}
+  .featured .price{color:#fff;font-size:15px}
+  .featured svg{position:absolute;right:-14px;bottom:-18px;width:90px;stroke:#fff;fill:none;stroke-width:1.2;opacity:.18}
+
+  .empty{text-align:center;color:var(--muted);padding:40px 0;font-family:'DM Mono',monospace;font-size:13px}
+  .preview{margin:22px 22px 0;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--caramel);border:1.5px dashed var(--caramel-2);border-radius:var(--radius);padding:12px}
+  footer{text-align:center;margin:28px 22px 0;color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+  footer a{color:var(--caramel);text-decoration:none;font-weight:700}
+
+  /* ===== Navegación inferior ===== */
+  nav{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:#2F2925;display:grid;grid-template-columns:repeat(4,1fr);padding:8px;border-radius:22px;z-index:10;box-shadow:0 10px 30px rgba(47,41,37,.35)}
+  nav button{background:none;border:0;color:#B9AA9A;font:inherit;font-size:10.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 0 6px;border-radius:15px;transition:background .2s,color .2s}
+  nav button svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  nav button.on{color:#fff;background:var(--caramel)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <!-- Grabado de rama de café (dibujo a línea) -->
+    <svg class="engrave" viewBox="0 0 480 190" preserveAspectRatio="xMidYMid slice">
+      <path d="M-10 150 C80 120 140 60 230 40 S400 10 500 -10"/>
+      <path d="M60 128c-10-30 5-55 30-62-2 28-12 48-30 62z"/><path d="M62 126c8-20 16-36 26-54"/>
+      <path d="M150 78c-30-6-48 8-56 30 26 4 44-8 56-30z"/><path d="M148 80c-18 10-32 18-50 26"/>
+      <path d="M300 30c10-28 36-38 60-32-8 26-30 38-60 32z"/><path d="M302 30c18-10 36-20 56-30"/>
+      <ellipse cx="200" cy="74" rx="15" ry="19" transform="rotate(-25 200 74)"/><path d="M193 58c10 10 6 22 14 32"/>
+      <ellipse cx="226" cy="86" rx="14" ry="18" transform="rotate(20 226 86)"/><path d="M222 70c-4 12 8 20 6 32"/>
+      <ellipse cx="250" cy="62" rx="13" ry="17" transform="rotate(-10 250 62)"/><path d="M246 46c6 10 2 22 8 32"/>
+      <ellipse cx="400" cy="70" rx="16" ry="20" transform="rotate(35 400 70)"/><path d="M392 54c10 10 4 24 14 32"/>
+      <ellipse cx="428" cy="96" rx="14" ry="18" transform="rotate(-20 428 96)"/><path d="M424 80c-2 12 6 22 6 32"/>
+      <ellipse cx="40" cy="40" rx="14" ry="18" transform="rotate(15 40 40)"/><path d="M36 24c-2 12 6 22 6 32"/>
+      <path d="M330 150c20-30 60-40 90-20-26 26-60 34-90 20z"/><path d="M334 148c28-6 54-12 84-18"/>
+      <path d="M20 80c4 3 8 3 12 0M440 30c4 3 8 3 12 0M120 30c4 3 8 3 12 0M280 120c4 3 8 3 12 0"/>
+    </svg>
+    <div class="logo">
+      <svg viewBox="0 0 120 120">
+        <defs><path id="arcTop" d="M20 60a40 40 0 0 1 80 0"/><path id="arcBot" d="M16 60a44 44 0 0 0 88 0"/></defs>
+        <circle class="ring" cx="60" cy="60" r="56"/>
+        <circle class="ring" cx="60" cy="60" r="33"/>
+        <text><textPath href="#arcTop" startOffset="50%" text-anchor="middle">BEANS</textPath></text>
+        <text><textPath href="#arcBot" startOffset="50%" text-anchor="middle">TIENDA·DE·CAFÉ</textPath></text>
+        <text class="b" x="60" y="79" text-anchor="middle">B</text>
+      </svg>
+    </div>
+  </header>
+
+  <div class="hello">
+    <div class="t">Carta digital</div>
+    <div class="msg"><i></i><span id="greet"></span></div>
+  </div>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+    <input id="q" type="search" placeholder="Buscá un café, un plato, un postre…">
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <main id="list"></main>
+
+  <p class="preview" id="preview">Vista previa · la versión final incluye la carta completa</p>
+  <footer>Beans · Tienda de café · @beans.tiendadecafe<br><br>Demo hecha por <a href="#">NorteDigital.Dev</a></footer>
+
+  <nav id="nav"></nav>
+</div>
+
+<script>
+// ===== Íconos de línea (taza, croissant, plato, vaso) =====
+const ICONS = {
+  cup:   '<path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M16 10h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M9 3c-1 1.5 1 2.5 0 4M12 3c-1 1.5 1 2.5 0 4"/>',
+  crois: '<path d="M3 15c2-6 6-9 9-9s7 3 9 9c-3 1-5 0-6-2-1 2-2 3-3 3s-2-1-3-3c-1 2-3 3-6 2z"/><path d="M9 7.5l1.5 6M15 7.5l-1.5 6"/>',
+  plate: '<circle cx="12" cy="13" r="7"/><circle cx="12" cy="13" r="3.5"/><path d="M3 4v5M5 4v5M3 9h2M4 9v11M21 4c-2 2-2 6 0 7v9"/>',
+  glass: '<path d="M7 3h10l-1.5 18h-7z"/><path d="M7.5 8h9"/><path d="M14 3l3-2"/>',
+  bean:  '<ellipse cx="12" cy="12" rx="6" ry="8.5" transform="rotate(25 12 12)"/><path d="M9 5c4 4 2 10 6 14"/>'
+};
+
+// ===== Datos (precios tomados de las cartas de Octubre 2026) =====
+// tags: veg, tacc (sin TACC), promo (precio promocional)
+const MENU = {
+  cafeteria: { label:"Cafetería", icon:ICONS.cup, blocks:[
+    { title:"Cafetería", items:[
+      ["Americano","Café doble suave.",5800],
+      ["Macchiato","Café doble con espuma de leche.",5800],
+      ["Flat White","Espresso doble con leche texturizada.",5800]]},
+    { title:"Cafés especiales", items:[
+      ["Cappuccino","Café, leche, crema y cacao.",6500],
+      ["Mocaccino","Café suave con cacao y leche.",6000],
+      ["Latte saborizado","Con syrup de vainilla, caramelo o avellana.",6000],
+      ["Nutelatte","Café, leche y nutella.",6500],
+      ["Moka","Café, leche, dulce de leche, chocolate y crema.",6500],
+      ["Bombón con chocolate","Café, leche, condensada de chocolate y crema.",6500]]},
+    { featured:true, name:"Honey Matcha", desc:"Infusión de té verde, leche y miel.", price:6000 },
+    { title:"Cafés fríos", items:[
+      ["Iced Latte","Doble espresso con leche fría y hielo.",5800],
+      ["Iced Americano","Espresso intenso con agua fría y hielo.",5800],
+      ["Iced Moka","Espresso, leche fría, syrup de chocolate y hielo.",6500],
+      ["Vanilla Iced","Café, leche, vainilla, condensada y crema.",6500],
+      ["Dolce","Café, dulce de leche, azúcar morena, leche y crema.",6500],
+      ["Caramel Frappuccino","Café, syrup de caramelo, leche, crema y topping de caramelo.",6500]]}
+  ]},
+
+  meriendas: { label:"Meriendas", icon:ICONS.crois, blocks:[
+    { title:"Desayunos & meriendas", note:"Todos se sirven con café con leche, té o mate. * Precio promocional: consultar con café doble o leche de almendras.", items:[
+      ["Clásico J&Q","Café con leche con dos medialunas de jamón y queso.",11000],
+      ["Energético","Mixto en pan multicereal, mix de frutas y jugo de naranja.",13000,["promo"]],
+      ["French Toast","Pan brioche, frutas de estación y miel.",14000,["promo"]],
+      ["Fit","Hot cakes de avena, frutas, frutos secos, mantequilla de maní o miel y jugo.",14000,["promo"]],
+      ["Avocado Toast","Masa madre, queso blanco, palta, huevo revuelto y jugo.",13500,["promo","veg"]],
+      ["Francés","Croissant con jamón, queso y manteca, y jugo de naranja.",15000,["promo"]],
+      ["Italiano","Mini ciabatta de crudo y queso blanco con omelette y tomate.",16000,["promo"]],
+      ["Brunch Keto","Leche de almendras, pan nube, palta, panceta, huevo, cherry y queso blanco.",16500,["promo"]]]},
+    { title:"Sandwiches", sub:"En pan de miga", items:[
+      ["Vegetariano","Queso azul, zanahoria, remolacha y mayonesa.",12000,["veg"]],
+      ["Parisino","Queso azul, rúcula, nueces y mayonesa de apio.",12000,["veg"]],
+      ["Fresco","Jamón cocido, queso tybo, palta y mayonesa.",11000],
+      ["Romano","Crudo, rúcula, tomates confitados, olivas y queso blanco.",14000],
+      ["Especial Americano","Tocino, palta, tomate, huevo y mayonesa.",14000]]},
+    { title:"Tostados", sub:"En pan brioche", items:[
+      ["Queso y tomate","Tybo, parmesano, tomates confitados, rúcula y olivas.",8500,["veg"]],
+      ["Tres quesos","Tybo, parmesano y cheddar/roquefort.",8500,["veg"]],
+      ["Cheddar","Cheddar, panceta y huevo revuelto con barbacoa.",10000]]},
+    { title:"Ciabattas", items:[
+      ["Salmón","Salmón ahumado, rúcula, palta, huevo, tomate y holandesa.",17000],
+      ["Primavera","Jamón cocido, tybo, parmesano, tomates confitados y pesto.",13000],
+      ["Crudo y rúcula","",13000],
+      ["Danesa","Jamón cocido, tomate, huevo, queso gratinado y mayonesa.",15000]]},
+    { title:"Croissants", items:[
+      ["Dulce de leche","",8000],["Nutella","",12000],["Jamón y queso","",12000]]},
+    { title:"Baguettes", items:[
+      ["Clásico","Jamón cocido y queso tybo.",12000],
+      ["Tentación","Jamón cocido, tybo, rúcula, huevo y queso blanco.",12000],
+      ["Tradicional","Jamón crudo y queso.",15000],
+      ["Americano","Ternera, tybo, morrones, huevo y salsa BBQ.",16000],
+      ["Ternera","Ternera, tomate, palta y mayonesa.",16000],
+      ["Italiano","Crudo, tybo, tomate y olivas negras.",16000]]},
+    { title:"Granolas", items:[
+      ["Tentación","Yogurt, granola, frutos rojos y crema.",7500],
+      ["Silvestre","Yogurt, granola, fruta de estación y miel.",7500],
+      ["Proteica","Yogurt, granola, banana y mantequilla de maní.",7500]]},
+    { title:"Pastelería", items:[
+      ["Sacramento","",1800],["Medialuna con jamón y queso","",3500],
+      ["Galleta de avena","Con semillas de girasol y miel.",3500],
+      ["Alfajor de maicena","Dulce de leche y coco rallado.",3500]]},
+    { title:"Pannico · Panadería creativa", partner:true, items:[
+      ["Alfajor de almendras","Sin harina, dulce de leche y fondant de limón.",5300],
+      ["Mini budín de limón y arándanos","Glaseado de limón.",5300],
+      ["Mini Lemon Pie","Masa sablée, mousse de limón y merengue italiano.",8000],
+      ["Mini Rogel","Dulce de leche y merengue italiano.",8500],
+      ["Mini torta de almendras y DDL","Base sin harina con merengue italiano.",8300],
+      ["Mini delicatessen de chocolate","Ganache con licor y ralladura de naranja.",8300],
+      ["Mini bomba de chocolate","Mousse, dulce de leche, semiamargo y pistacho.",8900]]},
+    { title:"Sin TACC", items:[
+      ["Alfajor de dulce de leche y coco","",3500,["tacc"]],
+      ["Alfajor con mousse de limón","",3500,["tacc"]],
+      ["Alfajor de chocolate","Sin harinas, sin azúcar agregada.",5500,["tacc"]]]}
+  ]},
+
+  almuerzo: { label:"Almuerzo", icon:ICONS.plate, blocks:[
+    { title:"Platos", items:[
+      ["Pechuguitas Crispy","Rebozadas en semillas y avena, papas gratinadas y cebollín.",25000],
+      ["Pechuguitas con risotto","Reducción balsámica, risotto de apio, puerros y marsala.",25000],
+      ["Suprema napolitana","Con papas.",26000],
+      ["Medallones de cerdo crocantes","Crema de queso blanco, nueces y vegetales.",25000],
+      ["Lomo de cerdo delicioso","Papas rústicas, jalea de arándanos y chips de panceta.",25000],
+      ["Churrasquito de filet","Con brócoli y puré de calabaza.",26000],
+      ["Milanesitas de ternera","Con spaghetti.",25000],
+      ["Filet gratén","Filet gratinado con papas.",26000],
+      ["Sorrentinos de calabaza","Gratinados a los tres quesos.",25000,["veg"]],
+      ["Tallarines al pesto rojo","Tomates secos, aceitunas y chips de panceta.",24000],
+      ["Risotto de hongos","Con queso, trozos de carne y rúcula.",20000]]},
+    { title:"Tartas", items:[["Pollo y puerros","",18000],["Jamón y queso","",17000]]},
+    { title:"Ensaladas", items:[
+      ["Caesar con pollo","Hojas verdes, parmesano, croutons y aderezo.",18000],
+      ["Cobb Salad","Lechuga, cherry, panceta, palta, pollo, huevo y queso azul.",18000],
+      ["Salmón ahumado","Hojas verdes, palta, quinoa, huevo poché y semillas.",20000]]},
+    { title:"Ciabattas", items:[
+      ["Vegetariana","Tybo, tomate, zucchinis y berenjena rostizada.",12000,["veg"]],
+      ["Pollo","Pollo grillado, lechuga, espinaca, palta, huevo y mayonesa.",16000],
+      ["Salmón ahumado","Rúcula, palta, huevo, tomate y holandesa.",17000]]},
+    { title:"Postres", items:[
+      ["Mini Lemon Pie","Masa sablée, mousse de limón y merengue italiano.",8000],
+      ["Mini bomba de chocolate","Mousse, dulce de leche y semiamargo con pistacho.",8900],
+      ["Copa Patagonia","Helado de crema americana con frutos rojos.",8000]]}
+  ]},
+
+  bebidas: { label:"Bebidas", icon:ICONS.glass, blocks:[
+    { title:"Batidos & limonadas", items:[
+      ["Frozen de maracuyá","Con jugo de naranja.",5800],
+      ["Smoothie de piña y coco","Leche de almendras y canela.",5800],
+      ["Té frío de hibiscus","Frutos rojos y jugo de limón.",5800],
+      ["Andino","Frutos rojos, banana, leche y crema.",5800],
+      ["Púrpura","Arándanos y jugo de naranja.",5800],
+      ["Green Garden","Limón, pepino, apio y espinaca.",5800],
+      ["Limonada frozen","Limón, menta y jengibre.",5800],
+      ["Limonada de frutos rojos","Limón, frutos rojos, menta y jengibre.",5800],
+      ["Limonada sunshine","Limón, naranja y maracuyá.",5800]]},
+    { title:"Jugos detox", items:[
+      ["Verde","Manzana verde, pepino y apio.",5800],
+      ["Naranja","Naranja, zanahoria, manzana roja y jengibre.",5800]]},
+    { title:"Bebidas", items:[
+      ["Agua con o sin gas","",4000],["Jugo de naranja","350 cc.",5300],["Stella Artois","330 cc.",6500]]}
+  ]}
+};
+
+// ===== Modo demo: muestra ~50% de la carta =====
+// Con DEMO = false se ve la carta completa (ya está toda cargada arriba)
+const DEMO = true;
+const KEEP = {
+  "cafeteria|Cafetería": ["Americano","Flat White"],
+  "cafeteria|Cafés especiales": ["Cappuccino","Latte saborizado","Moka"],
+  "cafeteria|Cafés fríos": ["Iced Latte","Vanilla Iced","Caramel Frappuccino"],
+  "meriendas|Desayunos & meriendas": ["Clásico J&Q","French Toast","Avocado Toast","Brunch Keto"],
+  "meriendas|Sandwiches": ["Parisino","Romano"],
+  "meriendas|Tostados": ["Tres quesos"],
+  "meriendas|Ciabattas": ["Salmón","Primavera"],
+  "meriendas|Croissants": ["Dulce de leche","Jamón y queso"],
+  "meriendas|Baguettes": ["Tentación","Americano"],
+  "meriendas|Granolas": ["Proteica"],
+  "meriendas|Pastelería": ["Medialuna con jamón y queso","Alfajor de maicena"],
+  "meriendas|Pannico · Panadería creativa": ["Alfajor de almendras","Mini Rogel","Mini bomba de chocolate"],
+  "meriendas|Sin TACC": ["Alfajor de chocolate"],
+  "almuerzo|Platos": ["Pechuguitas Crispy","Medallones de cerdo crocantes","Churrasquito de filet","Sorrentinos de calabaza","Risotto de hongos"],
+  "almuerzo|Tartas": ["Pollo y puerros"],
+  "almuerzo|Ensaladas": ["Caesar con pollo","Salmón ahumado"],
+  "almuerzo|Ciabattas": ["Vegetariana"],
+  "almuerzo|Postres": ["Mini Lemon Pie","Copa Patagonia"],
+  "bebidas|Batidos & limonadas": ["Frozen de maracuyá","Andino","Green Garden","Limonada de frutos rojos"],
+  "bebidas|Jugos detox": ["Verde"],
+  "bebidas|Bebidas": ["Agua con o sin gas","Stella Artois"]
+};
+if (DEMO) {
+  Object.entries(MENU).forEach(([tabKey, t]) => t.blocks.forEach(b => {
+    if (b.items) b.items = b.items.filter(i => (KEEP[tabKey+"|"+b.title] || []).includes(i[0]));
+  }));
+}
+
+const BADGE = { veg:'<span class="badge veg">Veggie</span>', tacc:'<span class="badge tacc">Sin TACC</span>', promo:'<span class="badge promo">Promo *</span>' };
+const money = n => "$" + n.toLocaleString("es-AR");
+// Normaliza: minúsculas y sin acentos ("Café" -> "cafe")
+const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const slug = s => s.toLowerCase().normalize("NFD").replace(/[^a-z0-9]+/g,"-");
+
+// ===== Abre la carta según la hora del celular =====
+function tabByHour(){
+  const h = new Date().getHours();
+  if (h >= 12 && h < 16) return "almuerzo";
+  if (h >= 16 && h < 20) return "meriendas";
+  return "cafeteria";
+}
+let tab = tabByHour(), query = "";
+
+function greet(){
+  const h = new Date().getHours();
+  const txt = { cafeteria:"¿Arrancamos con un café?", meriendas:"Hora de merendar", almuerzo:"Es hora de almorzar", bebidas:"Algo fresco para tomar" }[tab];
+  document.getElementById("greet").textContent = (h<12?"Buen día · ":h<20?"Buenas tardes · ":"Buenas noches · ") + txt;
+}
+
+function renderNav(){
+  nav.innerHTML = Object.entries(MENU).map(([k,v]) =>
+    `<button class="${k===tab?'on':''}" data-tab="${k}"><svg viewBox="0 0 24 24">${v.icon}</svg>${v.label}</button>`).join("");
+}
+
+function renderChips(){
+  const titles = MENU[tab].blocks.filter(b=>b.title).map(b=>b.title);
+  chips.innerHTML = query ? "" : titles.map(t=>`<button class="chip" data-go="${slug(t)}">${t.split(" · ")[0]}</button>`).join("");
+}
+
+function itemHTML([name,desc,price,tags=[]]){
+  return `<div class="item"><div><h3>${name}</h3>${desc?`<p>${desc}</p>`:""}${tags.length?`<div class="badges">${tags.map(t=>BADGE[t]).join("")}</div>`:""}</div><span class="price">${money(price)}</span></div>`;
+}
+
+function renderList(){
+  let html = "";
+  const tabs = query ? Object.values(MENU) : [MENU[tab]];
+  tabs.forEach(t => t.blocks.forEach(b => {
+    if (b.featured){
+      if (!query || norm(b.name+" "+b.desc).includes(query))
+        html += `<div class="featured"><div><small>Recomendado</small><h3>${b.name}</h3><p>${b.desc}</p></div><span class="price">${money(b.price)}</span><svg viewBox="0 0 24 24">${ICONS.cup}</svg></div>`;
+      return;
+    }
+    const items = b.items.filter(i => norm(i[0]+" "+i[1]).includes(query));
+    if (!items.length) return;
+    html += `<section class="block ${b.partner?'partner':''}" id="${slug(b.title)}">
+      <h2><svg viewBox="0 0 24 24">${ICONS.bean}</svg>${query ? t.label+" · "+b.title : b.title}</h2>
+      ${b.sub?`<div class="sub">${b.sub}</div>`:""}
+      ${b.note && !query?`<div class="note">${b.note}</div>`:""}
+      ${items.map(itemHTML).join("")}</section>`;
+  }));
+  list.innerHTML = html || '<div class="empty">No encontramos eso en la carta ☕</div>';
+}
+
+function render(){ renderNav(); renderChips(); renderList(); greet(); }
+
+const nav = document.getElementById("nav"), chips = document.getElementById("chips"), list = document.getElementById("list"), q = document.getElementById("q");
+
+nav.addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  tab = b.dataset.tab; query = ""; q.value = "";
+  render(); window.scrollTo({top:0});
+});
+chips.addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  document.getElementById(b.dataset.go)?.scrollIntoView({behavior:"smooth"});
+});
+q.addEventListener("input", e => { query = norm(e.target.value.trim()); renderChips(); renderList(); });
+
+// Marca el chip de la sección visible mientras scrolleás
+const spy = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (!en.isIntersecting) return;
+    chips.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.dataset.go === en.target.id));
+    // Mueve SOLO la barra de chips en horizontal (no la página)
+    const on = chips.querySelector(".chip.on");
+    if (on) chips.scrollTo({ left: on.offsetLeft - chips.clientWidth/2 + on.clientWidth/2, behavior:"smooth" });
+  });
+}, { rootMargin:"-30% 0px -65% 0px" });
+new MutationObserver(() => document.querySelectorAll(".block").forEach(s => spy.observe(s))).observe(list,{childList:true});
+window.addEventListener("scroll", () => chips.classList.toggle("stuck", chips.getBoundingClientRect().top <= 0));
+
+render();
+</script>
+</body>
+</html>
